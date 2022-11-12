@@ -1,55 +1,48 @@
 package com.empresax.security.web.security.jwt;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import static com.empresax.security.web.security.Constant.ROLE_CLAIM;
+import static com.empresax.security.web.security.Constant.TIME_EXPIRED;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
+
 // 3
+@Component
 public class JwtUtil {
 
-    private static final String ACCESS_TOKEN_SECRET = "DevEFRXNGGeCOMMERCES3CR3TKEYW1THSPRINGS3CUR1TY4NDJWT";
+    public static final String SECRET_KEY = "DevEFRXNGGeCOMMERCES3CR3TKEYW1THSPRINGS3CUR1TY4NDJWT";
 
-    public static String generateToken(String username) {
-
+    public String create(UserDetails principal) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put(ROLE_CLAIM, principal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+        payload.put("sub", principal.getUsername());
         var ms = System.currentTimeMillis();
         return Jwts.builder()
-                .setId(UUID.randomUUID().toString())
-                .setSubject(username)
+                .setClaims(payload)
                 .setIssuedAt(new Date(ms))
-                .setExpiration(new Date(ms + TimeUnit.HOURS.toMillis(10)))
-                .signWith(Keys.hmacShaKeyFor(ACCESS_TOKEN_SECRET.getBytes()))
+                .setExpiration(new Date(ms + TIME_EXPIRED))
+                .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
                 .compact();
     }
 
-    public static UsernamePasswordAuthenticationToken getAuthentication(String token) {
-        try {
-            return new UsernamePasswordAuthenticationToken(
-                    getSubject(token),
-                    null,
-                    Collections.emptyList());
-        } catch (JwtException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static Claims getClaims(String token) {
+    public Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(ACCESS_TOKEN_SECRET.getBytes())
+                .setSigningKey(SECRET_KEY.getBytes())
                 .build()
                 .parseClaimsJws(token).getBody();
     }
 
-    public static String getSubject(String token) {
-        return getClaims(token).getSubject();
-    }
-    
 }

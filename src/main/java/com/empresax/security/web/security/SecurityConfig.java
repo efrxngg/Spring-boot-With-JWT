@@ -3,6 +3,7 @@ package com.empresax.security.web.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,7 +37,8 @@ public class SecurityConfig {
 
         return httpSecurity.cors().and().csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/api/auth/v1/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/v1/**").permitAll()
                 .antMatchers("/api/users/v1/add").permitAll()
                 .antMatchers("/api/admin/user/v1/**").hasAnyAuthority("ADMIN")
                 .anyRequest().authenticated()

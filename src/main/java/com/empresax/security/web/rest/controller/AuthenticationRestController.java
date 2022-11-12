@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,12 +21,15 @@ public class AuthenticationRestController implements AuthenticationApi {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public ResponseEntity<String> clainToken(@RequestBody UserAuthenticationDTO user) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-        String token = JwtUtil.generateToken(user.getUsername());
+        var au = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        String token = jwtUtil.create((UserDetails) au.getPrincipal());
         return new ResponseEntity<>(token, HttpStatus.OK);
     }
-    
+
 }

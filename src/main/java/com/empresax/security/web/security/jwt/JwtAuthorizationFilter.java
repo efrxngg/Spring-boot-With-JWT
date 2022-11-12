@@ -1,6 +1,8 @@
 package com.empresax.security.web.security.jwt;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
@@ -15,44 +17,48 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.empresax.security.persistence.entity.StateType;
-import com.empresax.security.persistence.repository.IRolEntityCrudRepository;
-import com.empresax.security.persistence.repository.IUserEnitityCrudRepository;
-
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-
+import static com.empresax.security.web.security.Constant.ROLE_CLAIM;
+import static com.empresax.security.web.security.Constant.TOKEN_PREFIX;
 // 1 Authorization
 @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private IUserEnitityCrudRepository userRepo;
-    @Autowired
-    private IRolEntityCrudRepository rolRepo;
+    private JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (Objects.isNull(header) || !header.startsWith(TOKEN_PREFIX)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        String tokenWithBearer = request.getHeader("Authorization");
-        if (tokenWithBearer != null && tokenWithBearer.startsWith("Bearer ")) {
-            String token = tokenWithBearer.replace("Bearer ", "");
-            String username = null;
-            try{
-                username= JwtUtil.getSubject(token);
-            }catch(ExpiredJwtException e){System.out.println(e.getMessage());}
-            if (username != null) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        username,
-                        userRepo.findPasswordByUsername(username),
-                        rolRepo.findAllRolesByUsername(username).stream()
-                                .filter(rol -> rol.getState().equals(StateType.ACTIVE))
-                                .map(rol -> new SimpleGrantedAuthority(rol.getName()))
-                                .collect(Collectors.toSet()));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
+        String token = header.replace(TOKEN_PREFIX, "");
+        Claims claims = null;
+        try {
+            claims = jwtUtil.getClaims(token);
+        } catch (ExpiredJwtException e) {
+        }
+        if (Objects.nonNull(claims)) {
+            var user = createUsernamePasswordAuthenticationToken(claims);
+            SecurityContextHolder.getContext().setAuthentication(user);
         }
         filterChain.doFilter(request, response);
+    }
+
+    private UsernamePasswordAuthenticationToken createUsernamePasswordAuthenticationToken(Claims claims) {
+        var user = new UsernamePasswordAuthenticationToken(
+                claims.get("sub", String.class),
+                null,
+                List.of(claims.get(ROLE_CLAIM).toString().split(",")).stream()
+                        .map(rol -> rol.replace("[", "").replace("]", "").strip())
+                        .map(rol -> new SimpleGrantedAuthority(rol))
+                        .collect(Collectors.toList()));
+        return user;
     }
 
 }
