@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.empresax.security.domain.api.AuthenticationApi;
 import com.empresax.security.domain.dto.UserAuthenticationDTO;
-import com.empresax.security.web.AuthenticationApi;
 import com.empresax.security.web.security.jwt.JwtUtil;
 
 // 4

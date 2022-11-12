@@ -1,4 +1,4 @@
-package com.empresax.security.web;
+package com.empresax.security.domain.api;
 
 import java.util.List;
 import java.util.UUID;

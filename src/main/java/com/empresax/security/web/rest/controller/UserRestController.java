@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.empresax.security.domain.User;
+import com.empresax.security.domain.api.UserApi;
 import com.empresax.security.domain.service.IUserService;
-import com.empresax.security.web.UserApi;
 
 @RestController
 @RequestMapping(value = "/api/users/v1")

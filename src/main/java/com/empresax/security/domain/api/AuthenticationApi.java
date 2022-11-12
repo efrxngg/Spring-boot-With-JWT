@@ -1,4 +1,4 @@
-package com.empresax.security.web;
+package com.empresax.security.domain.api;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.ResponseEntity;

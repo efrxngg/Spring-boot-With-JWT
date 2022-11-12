@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.empresax.security.domain.api.UserEntityApi;
 import com.empresax.security.domain.service.IUserEntityService;
 import com.empresax.security.persistence.entity.UserEntity;
-import com.empresax.security.web.UserEntityApi;
 
 @RestController
 @RequestMapping(value = "/api/admin/user/v1")
